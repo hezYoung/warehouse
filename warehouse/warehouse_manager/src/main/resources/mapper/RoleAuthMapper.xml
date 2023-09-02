@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.young.mapper.RoleAuthMapper">
+
+  <delete id="removeRoleid">
+    delete from role where role_id=#{roleId}
+  </delete>
+  <!--查询已经有的角色-->
+  <select id="findallIds" resultType="java.lang.Integer">
+    select auth_id from role_auth where role_id = #{roleId}
+  </select>
+  <!--添加权限-->
+  <insert id="insertAuth">
+    insert into role_auth (role_id, auth_id) values(#{param1}, #{param2})
+  </insert>
+
+  <!--
+    //根据角色id删除给角色已分配的所有权限(菜单)
+    public int delAuthByRoleId(Integer roleId);
+   -->
+  <delete id="delAuthByRoleId">
+    delete from role_auth where role_id = #{roleId}
+  </delete>
+
+</mapper>

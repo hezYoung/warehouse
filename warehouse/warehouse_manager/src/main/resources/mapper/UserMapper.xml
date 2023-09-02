@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.young.mapper.UserMapper">
+    <update id="updateUserState">
+        update user_info set
+        user_state = #{userState}, update_By=#{updateBy}, update_time=#{updateTime}
+        where user_id = #{userId}
+    </update>
+    <update id="setUserDelete">
+        update user_info set is_delete = 1 where user_id = #{userId}
+    </update>
+    <update id="updateNameById">
+        update user_info set user_name = #{userName}, update_by = #{updateBy}, update_time = now()
+        where user_id = #{userId}
+    </update>
+    <!--重置密码-->
+    <update id="updatePwdById">
+        update user_info set user_pwd = #{userPwd} where user_id = #{userId}
+    </update>
+
+    <select id="findbyuser" resultType="user">
+        select * from user_info WHERE user_code = #{userCode} and is_delete = 0
+    </select>
+
+    <!--
+      //查询用户总行数的方法
+      public int selectUserCount(User user)
+    -->
+    <select id="selectUserCount" resultType="integer">
+        select count(*) from user_info
+        <where>
+            <if test="userCode != null and userCode != ''">
+                and user_code like concat('%', #{userCode}, '%')
+            </if>
+            <if test="userType != null and userType != ''">
+                and user_type = #{userType}
+            </if>
+            <if test="userState != null and userState != ''">
+                and user_state = #{userState}
+            </if>
+            and is_delete = 0
+        </where>
+    </select>
+
+    <!--
+     //分页查询用户的方法
+    public List<User> selectUserPage(@Param("page") Page page, @Param("user")User user)
+    -->
+    <select id="selectUserPage" resultType="user">
+        select t1.*, t2.user_code getCode from user_info t1, user_info t2
+       where t1.create_by = t2.user_id and t1.is_delete = 0
+       <if test="user.userCode != null and user.userCode != ''">
+                and t1.user_code like concat('%', #{user.userCode}, '%')
+       </if>
+       <if test="user.userType != null and user.userType != ''">
+                and t1.user_type = #{user.userType}
+       </if>
+        <if test="user.userState != null and user.userState != ''">
+                and t1.user_state = #{user.userState}
+        </if>
+        order by t1.create_time desc
+        limit #{page.limitIndex},#{page.pageSize}
+    </select>
+<!--插入用户-->
+    <insert id="saveallUser">
+        insert into user_info (user_name,user_code,user_pwd,user_state,is_delete,create_by,create_time) values  (#{userName},#{userCode},#{userPwd},0,0,#{createBy},now())
+    </insert>
+</mapper>

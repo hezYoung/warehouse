@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.young.mapper.AuthMapper">
+    <select id="findbyAuth" resultType="auth">
+        select distinct t3.* from user_role t1, role_auth t2, auth_info t3
+        where t1.role_id = t2.role_id and t2.auth_id = t3.auth_id
+          and t3.auth_state=1 and t3.auth_type!=3 and t1.user_id=#{userId}
+    </select>
+
+    <select id="findAuthTree" resultType="com.young.pojo.Auth">
+        select * from auth_info where auth_state = 1
+    </select>
+</mapper>

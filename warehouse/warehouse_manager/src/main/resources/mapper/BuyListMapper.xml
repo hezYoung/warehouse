@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.young.mapper.BuyListMapper">
+
+  <insert id="insertPurchase">
+    insert into buy_list values(
+    null, #{productId}, #{storeId}, #{buyNum}, null, now(),
+    #{supplyId}, #{placeId}, #{buyUser}, #{phone}, 0
+    )
+  </insert>
+  <update id="updatePurchaseById">
+    update buy_list set
+    buy_num = #{buyNum}, fact_buy_num = #{factBuyNum}
+    where buy_id = #{buyId}
+  </update>
+
+  <!--
+    //根据id将采购单状态改为已入库的方法
+    public int updateIsInById(Integer buyId)
+  -->
+  <update id="updateIsInById">
+    update buy_list set is_in = 1 where buy_id = #{buyId}
+  </update>
+
+  <delete id="deletePurchaseById">
+    delete from buy_list where buy_id = #{buyId}
+  </delete>
+
+
+  <!--
+   //查询采购单总行数的方法
+   public int selectPurchaseCount(Purchase purchase)
+  -->
+  <select id="selectPurchaseCount" resultType="integer">
+    select count(*) from buy_list t1, product t2, store t3
+    where t1.product_id = t2.product_id and t1.store_id = t3.store_id
+
+    <if test="storeId != null">
+      and t1.store_id = #{storeId}
+    </if>
+    <if test="productName != null and productName != ''">
+      and t2.product_name like concat('%', #{productName}, '%')
+    </if>
+    <if test="buyUser != null and buyUser != ''">
+      and t1.buy_user like concat('%', #{buyUser}, '%')
+    </if>
+    <if test="isIn != null and isIn != ''">
+      and t1.is_in = #{isIn}
+    </if>
+    <if test="startTime != null and startTime != ''">
+      and t1.buy_time &gt;= #{startTime}
+    </if>
+    <if test="endTime != null and endTime != ''">
+      and t1.buy_time &lt;= #{endTime}
+    </if>
+  </select>
+
+  <!--
+   //分页查询采购单的方法
+   public List<Purchase> selectPurchasePage(@Param("page") Page page,
+                                @Param("purchase") Purchase purchase)
+  -->
+  <select id="selectPurchasePage" resultType="com.young.pojo.BuyList">
+    select t1.*, t2.product_name, t3.store_name
+    from buy_list t1, product t2, store t3
+    where t1.product_id = t2.product_id and t1.store_id = t3.store_id
+
+    <if test="purchase.storeId != null">
+      and t1.store_id = #{purchase.storeId}
+    </if>
+    <if test="purchase.productName != null and purchase.productName != ''">
+      and t2.product_name like concat('%', #{purchase.productName}, '%')
+    </if>
+    <if test="purchase.buyUser != null and purchase.buyUser != ''">
+      and t1.buy_user like concat('%', #{purchase.buyUser}, '%')
+    </if>
+    <if test="purchase.isIn != null and purchase.isIn != ''">
+      and t1.is_in = #{purchase.isIn}
+    </if>
+    <if test="purchase.startTime != null and purchase.startTime != ''">
+      and t1.buy_time &gt;= #{purchase.startTime}
+    </if>
+    <if test="purchase.endTime != null and purchase.endTime != ''">
+      and t1.buy_time &lt;= #{purchase.endTime}
+    </if>
+
+    order by t1.buy_time desc
+    limit #{page.limitIndex}, #{page.pageSize}
+  </select>
+
+</mapper>

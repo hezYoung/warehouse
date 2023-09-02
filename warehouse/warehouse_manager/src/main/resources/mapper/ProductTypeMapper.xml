@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.young.mapper.ProductTypeMapper">
+  <insert id="insertProductType">
+    insert into product_type values(
+    null, #{parentId}, #{typeCode}, #{typeName}, #{typeDesc}
+    )
+  </insert>
+  <update id="updateTypeById">
+    update product_type set
+    type_name = #{typeName}, type_desc = #{typeDesc}
+    where type_id = #{typeId}
+  </update>
+  <delete id="deleteProductType">
+    delete from product_type where type_id = #{typeId} or parent_id = #{typeId}
+  </delete>
+
+  <!--
+       //查询所有商品分类的方法
+       public List<ProductType> findAllProductType()
+     -->
+  <select id="findAllProductType" resultType="productType">
+    select * from product_type
+  </select>
+    <select id="findTypeByCode" resultType="com.young.pojo.ProductType">
+      select * from product_type where type_code = #{typeCode}
+    </select>
+</mapper>

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.young.mapper.ProductMapper">
+
+  <select id="selectProductCount" resultType="integer">
+    select count(*) from
+    product t1, store t2, brand t3, product_type t4, supply t5,
+    place t6, unit t7
+    where t1.store_id = t2.store_id and t1.brand_id = t3.brand_id
+    and t1.type_id = t4.type_id and t1.supply_id = t5.supply_id
+    and t1.place_id = t6.place_id and t1.unit_id = t7.unit_id
+
+    <if test="storeId != null">
+      and t1.store_id = #{storeId}
+    </if>
+    <if test="productName != null and productName != ''">
+      and t1.product_name like concat('%',#{productName},'%')
+    </if>
+    <if test="brandName != null and brandName != ''">
+      and t3.brand_name like concat('%', #{brandName}, '%')
+    </if>
+    <if test="typeName != null and typeName != ''">
+      and t4.type_name like concat('%', #{typeName}, '%')
+    </if>
+    <if test="supplyName != null and supplyName != ''">
+      and t5.supply_name like concat('%', #{supplyName}, '%')
+    </if>
+    <if test="placeName != null and placeName != ''">
+      and t6.place_name like concat('%', #{placeName}, '%')
+    </if>
+    <if test="upDownState != null and upDownState != ''">
+      and t1.up_down_state = #{upDownState}
+    </if>
+    <!--
+      如果方法参数Product对象的isOverDate属性值为1(查询已过期商品),则查询
+      当前时间大于product表中supp_date列的时间的商品;
+      反之如果方法参数Product对象的isOverDate属性值为0(查询未过期商品),则
+      查询当前时间小于product表中supp_date列的时间的商品;
+    -->
+    <if test="isOverDate != null and isOverDate != '' and isOverDate==1">
+      and date_format(now(), '%y-%m-%d') &gt; t1.supp_date
+    </if>
+    <if test="isOverDate != null and isOverDate != '' and isOverDate==0">
+      and date_format(now(), '%y-%m-%d') &lt; t1.supp_date
+    </if>
+  </select>
+
+  <select id="selectProductPage" resultType="com.young.pojo.Product">
+    select t1.*, t2.store_name, t3.brand_name, t4.type_name,
+    t5.supply_name, t6.place_name, t7.unit_name from
+    product t1, store t2, brand t3, product_type t4, supply t5,
+    place t6, unit t7
+    where t1.store_id = t2.store_id and t1.brand_id = t3.brand_id
+    and t1.type_id = t4.type_id and t1.supply_id = t5.supply_id
+    and t1.place_id = t6.place_id and t1.unit_id = t7.unit_id
+
+    <if test="product.storeId != null">
+      and t1.store_id = #{product.storeId}
+    </if>
+    <if test="product.productName != null and product.productName != ''">
+      and t1.product_name like concat('%',#{product.productName},'%')
+    </if>
+    <if test="product.brandName != null and product.brandName != ''">
+      and t3.brand_name like concat('%', #{product.brandName}, '%')
+    </if>
+    <if test="product.typeName != null and product.typeName != ''">
+      and t4.type_name like concat('%', #{product.typeName}, '%')
+    </if>
+    <if test="product.supplyName != null and product.supplyName != ''">
+      and t5.supply_name like concat('%', #{product.supplyName}, '%')
+    </if>
+    <if test="product.placeName != null and product.placeName != ''">
+      and t6.place_name like concat('%', #{product.placeName}, '%')
+    </if>
+    <if test="product.upDownState != null and product.upDownState != ''">
+      and t1.up_down_state = #{product.upDownState}
+    </if>
+    <if test="product.isOverDate != null and product.isOverDate != '' and
+    product.isOverDate==1">
+      and date_format(now(), '%y-%m-%d') &gt; t1.supp_date
+    </if>
+    <if test="product.isOverDate != null and product.isOverDate != '' and
+    product.isOverDate==0">
+      and date_format(now(), '%y-%m-%d') &lt; t1.supp_date
+    </if>
+
+    order by t1.create_time
+    limit #{page.limitIndex}, #{page.pageSize}
+  </select>
+  <select id="selectProductById" resultType="com.young.pojo.Product">
+    select * from product where product_id = #{productId}
+  </select>
+  <select id="statisticsStoreInvent" resultType="com.young.vo.Statistics">
+    select t1.store_id, t2.store_name,
+           ifnull(sum(t1.product_invent),0) totalInvent
+    from product t1, store t2
+    where t1.store_id = t2.store_id
+    group by t1.store_id, t2.store_name
+
+  </select>
+
+  <insert id="insertProduct">
+    insert into product values
+    (
+    null, #{storeId}, #{brandId}, #{productName}, #{productNum},
+    #{productInvent}, #{typeId}, #{supplyId}, #{placeId}, #{unitId},
+    #{introduce}, 0, #{inPrice}, #{salePrice}, #{memPrice}, now(),
+    null, #{createBy}, null, #{imgs}, #{productDate}, #{suppDate}
+    )
+  </insert>
+  <!--
+   //根据商品id增加商品库存的方法
+   public int addInventById(Integer productId, Integer invent)
+ -->
+  <update id="addInventById">
+    update product set
+    product_invent = product_invent + #{param2}
+    where product_id = #{param1}
+  </update>
+
+
+  <update id="updateStateById">
+    update product set up_down_state = #{upDownState}
+    where product_id = #{productId}
+  </update>
+
+  <delete id="deleteProductByIds">
+    delete from product where product_id in
+    <foreach collection="list" open="(" close=")" separator="," item="productId">
+      #{productId}
+    </foreach>
+  </delete>
+
+  <update id="updateProductById">
+    <!--商品上下架状态、创建时间、创建者字段值不用改-->
+    update product set store_id = #{storeId}, brand_id = #{brandId},
+    product_name = #{productName}, product_num = #{productNum},
+    product_invent = #{productInvent}, type_id = #{typeId},
+    supply_id = #{supplyId}, place_id = #{placeId}, unit_id = #{unitId},
+    introduce = #{introduce}, in_price = #{inPrice}, sale_price = #{salePrice},
+    mem_price = #{memPrice}, update_time = now(), update_by = #{updateBy},
+    imgs = #{imgs}, product_date = #{productDate}, supp_date = #{suppDate}
+    where product_id = #{productId}
+
+  </update>
+</mapper>
